@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Provider(
       // The single instance of AppDatabase
-      builder: (_) => AppDatabase(),
+      builder: (_) => AppDatabase().taskDao,
       child: MaterialApp(
         title: 'Material App',
         home: HomePage(),

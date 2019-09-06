@@ -12,7 +12,7 @@ class Tasks extends Table{
   Set<Column> get primaryKey => {id, name};
 }
 
-@UseMoor(tables: [Tasks])
+@UseMoor(tables: [Tasks], daos: [TaskDao])
 class AppDatabase extends _$AppDatabase{
 
   AppDatabase()
@@ -23,9 +23,45 @@ class AppDatabase extends _$AppDatabase{
   @override
   int get schemaVersion =>1;
 
+
+}
+
+@UseDao(
+  tables: [Tasks],
+//queries: {
+//  'completedTasksGenerated' : 'SELECT * FROM tasks WHERE completed = 1 ORDER BY due_date DESC, name;'
+//    },
+)
+class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
+  final AppDatabase db;
+  TaskDao(this.db) : super(db);
+
   Future<List<Task>> getAllTask() => select(tasks).get();
 
-  Stream<List<Task>> watchAllTask() => select(tasks).watch();
+  Stream<List<Task>> watchAllTask(){
+    return(
+    select(tasks)
+        ..orderBy(([
+          (t)=> OrderingTerm(expression:t.dueDate,mode: OrderingMode.desc ),
+
+          (t)=> OrderingTerm(expression: t.name)
+        ]))
+
+    ).watch();
+  }
+
+  Stream<List<Task>> watchAllCompletedTask(){
+    return(
+        select(tasks)
+          ..orderBy(([
+                (t)=> OrderingTerm(expression:t.dueDate,mode: OrderingMode.desc ),
+
+                (t)=> OrderingTerm(expression: t.name)
+          ]))
+          ..where((t)=> t.completed.equals(true))
+
+    ).watch();
+  }
 
   Future insertTask(Task task) => into(tasks).insert(task);
 
